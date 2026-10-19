@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LumiVids Web — Generate Video & Gambar AI</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,sans-serif;background:#0f1420;color:#e8ecf4;min-height:100vh}
+header{background:#161d2e;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10}
+header h1{font-size:18px}
+header .saldo{background:#22c55e;color:#04240f;font-weight:700;padding:6px 12px;border-radius:20px;font-size:14px}
+nav{display:flex;gap:6px;padding:10px;background:#101625;overflow-x:auto;position:sticky;top:57px;z-index:9}
+nav button{background:#1c2438;color:#cbd5e1;border:none;padding:10px 16px;border-radius:10px;font-size:14px;white-space:nowrap;cursor:pointer}
+nav button.active{background:#3b82f6;color:#fff}
+main{max-width:640px;margin:0 auto;padding:18px 14px 60px}
+.card{background:#161d2e;border-radius:14px;padding:18px;margin-bottom:14px}
+.card h2{font-size:16px;margin-bottom:12px}
+label{display:block;font-size:13px;color:#94a3b8;margin:10px 0 4px}
+input[type=text],input[type=password],textarea,select{width:100%;background:#0f1420;border:1px solid #2a3550;color:#e8ecf4;border-radius:10px;padding:12px;font-size:15px}
+textarea{min-height:90px;resize:vertical}
+input[type=file]{margin:6px 0}
+button.primary{width:100%;background:#3b82f6;color:#fff;border:none;padding:14px;border-radius:12px;font-size:16px;font-weight:700;margin-top:14px;cursor:pointer}
+button.primary:disabled{background:#334155}
+button.ghost{background:#1c2438;color:#cbd5e1;border:none;padding:10px 14px;border-radius:10px;margin-top:8px;cursor:pointer;width:100%}
+.hidden{display:none!important}
+.status{margin-top:12px;padding:12px;border-radius:10px;font-size:14px}
+.status.ok{background:#052e16;color:#86efac}
+.status.err{background:#3f1d1d;color:#fca5a5}
+.status.info{background:#172554;color:#93c5fd}
+.job{border:1px solid #2a3550;border-radius:10px;padding:12px;margin-bottom:10px;font-size:14px}
+.job video,.job img{width:100%;border-radius:8px;margin-top:8px}
+.pkg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
+.pkg button{background:#1c2438;border:2px solid #2a3550;color:#e8ecf4;padding:14px;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer}
+.pkg button.sel{border-color:#3b82f6;background:#1e3a8a}
+.row{display:flex;gap:8px;align-items:center}
+.badge{font-size:12px;background:#2a3550;padding:3px 8px;border-radius:10px}
+</style>
+</head>
+<body>
+<header>
+<h1>🎬 LumiVids Web</h1>
+<div><span class="saldo hidden" id="saldoBadge">Rp0</span>
+<button class="ghost hidden" id="btnLogout" style="width:auto;margin:0 0 0 8px;padding:6px 10px">Keluar</button></div>
+</header>
+
+<div id="authView">
+<main><div class="card">
+<h2>Masuk / Daftar</h2>
+<label>Username</label><input type="text" id="username">
+<label>Password</label><input type="password" id="password">
+<button class="primary" id="btnLogin">Masuk</button>
+<button class="ghost" id="btnRegister">Daftar akun baru</button>
+<div class="status hidden" id="authMsg"></div>
+</div></main>
+</div>
+
+<div id="appView" class="hidden">
+<nav>
+<button data-tab="mc" class="active">🎬 MC RH</button>
+<button data-tab="seed">🎞️ Seedance</button>
+<button data-tab="img">🎨 Image</button>
+<button data-tab="saldo">💰 Saldo</button>
+<button data-tab="riwayat">📜 Riwayat</button>
+<button data-tab="admin" id="tabAdmin" class="hidden">🛠️ Admin</button>
+</nav>
+<main>
+<div class="card" id="tab-mc">
+<h2>🎬 Motion Control <span class="badge" id="priceMc"></span></h2>
+<label>Foto karakter</label><input type="file" id="mcPhoto" accept="image/*">
+<label>Video gerakan (maks 20 MB)</label><input type="file" id="mcVideo" accept="video/*">
+<label>Prompt (opsional, maks 5000)</label><textarea id="mcPrompt" placeholder="Contoh: orang menari..."></textarea>
+<button class="primary" id="btnMc">🚀 Generate</button>
+<div class="status hidden" id="mcStatus"></div>
+</div>
+
+<div class="card hidden" id="tab-seed">
+<h2>🎞️ Seedance 2.5 <span class="badge" id="priceSeed"></span></h2>
+<label>Gambar referensi (opsional, maks 20 MB)</label><input type="file" id="seedRef" accept="image/*">
+<label>Prompt (5–5000 karakter)</label><textarea id="seedPrompt" placeholder="Contoh: kucing berjalan di taman..."></textarea>
+<button class="primary" id="btnSeed">🚀 Generate</button>
+<div class="status hidden" id="seedStatus"></div>
+</div>
+
+<div class="card hidden" id="tab-img">
+<h2>🎨 Image (Seedream 5) <span class="badge" id="priceImg"></span></h2>
+<label>Gambar referensi (opsional)</label><input type="file" id="imgRef" accept="image/*">
+<label>Prompt (5–5000 karakter)</label><textarea id="imgPrompt" placeholder="Contoh: pemandangan gunung..."></textarea>
+<div class="row">
+<div style="flex:1"><label>Aspek</label><select id="imgAspect"><option value="916">9:16</option><option value="169">16:9</option></select></div>
+<div style="flex:1"><label>Resolusi</label><select id="imgRes"><option value="0">1K</option><option value="1">2K</option></select></div>
+</div>
+<button class="primary" id="btnImg">🚀 Generate</button>
+<div class="status hidden" id="imgStatus"></div>
+</div>
+
+<div class="card hidden" id="tab-saldo">
+<h2>💰 Saldo Saya</h2>
+<div style="font-size:28px;font-weight:800" id="saldoBig">Rp0</div>
+<h2 style="margin-top:16px">💳 Top Up</h2>
+<div class="pkg" id="pkgList"></div>
+<label>Bukti transfer (foto)</label><input type="file" id="topupProof" accept="image/*">
+<button class="primary" id="btnTopup">Kirim Bukti</button>
+<div class="status hidden" id="topupStatus"></div>
+<p style="font-size:12px;color:#64748b;margin-top:10px">Transfer dulu ke info pembayaran admin, lalu kirim bukti di sini. Saldo masuk setelah disetujui.</p>
+</div>
+
+<div class="card hidden" id="tab-riwayat">
+<h2>📜 Riwayat Generate</h2>
+<div id="jobList"></div>
+</div>
+
+<div class="card hidden" id="tab-admin">
+<h2>🛠️ Persetujuan Top Up</h2>
+<div id="topupList"></div>
+</div>
+</main>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
